@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import StorySubjectInput from "../_components/StorySubjectInput";
-import StoryType from "../_components/StoryType";
-import AgeGroup from "../_components/AgeGroup";
-import ImageStyle from "../_components/ImageStyle";
+import StorySubjectInput from "../_components/createStory/StorySubjectInput";
+import StoryType from "../_components/createStory/StoryType";
+import AgeGroup from "../_components/createStory/AgeGroup";
+import ImageStyle from "../_components/createStory/ImageStyle";
 import { Button } from "@heroui/button";
 import { chatSession } from "@/config/geminiAi";
 import CustomLoader from "../_components/CustomLoader";

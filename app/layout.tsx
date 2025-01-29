@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import NextProvider from "./provider";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const myAppFont = Nunito({
   subsets: ["latin"],
@@ -18,10 +19,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={myAppFont.className} suppressHydrationWarning={true}>
-        <NextProvider>{children}</NextProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={myAppFont.className} suppressHydrationWarning={true}>
+          <NextProvider>{children}</NextProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

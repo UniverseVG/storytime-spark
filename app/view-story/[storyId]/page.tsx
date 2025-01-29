@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
-import BookCoverPage from "@/app/_components/BookCoverPage";
-import LastPage from "@/app/_components/LastPage";
-import StoryPages from "@/app/_components/StoryPages";
+import BookCoverPage from "@/app/_components/storDetail/BookCoverPage";
+import LastPage from "@/app/_components/storDetail/LastPage";
+import StoryPages from "@/app/_components/storDetail/StoryPages";
 import { db } from "@/config/db";
 import { StoryData } from "@/config/schema";
 import { Chapter, Story } from "@/types";
@@ -50,16 +50,16 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   }
 
   return (
-    <div className="p-10 md:px-20 lg:px-40 flex-col">
+    <div className="p-10 md:px-20 lg:px-40">
       <h2 className="font-bold text-4xl text-center p-10 bg-primary text-white rounded-2xl">
         {story?.output?.bookTitle}
       </h2>
-      <div className="relative">
+      <div className="relative flex justify-center">
         {/* @ts-expect-error */}
         <HTMLFlipBook
           width={500}
           height={500}
-          className="mt-10"
+          className="mt-10 w-full"
           showCover
           useMouseEvents={false}
           ref={bookRef}
@@ -78,26 +78,28 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
             <LastPage />
           </div>
         </HTMLFlipBook>
+
         {count !== 0 && (
           <div
-            className="absolute -left-5 top-[250px]"
+            className="absolute -left-6 top-1/2 -translate-y-1/2"
             onClick={() => {
               bookRef.current?.pageFlip().flipPrev();
               setCount(count - 1);
             }}
           >
-            <IoIosArrowDropleftCircle className="text-[40px] text-primary cursor-pointer" />
+            <IoIosArrowDropleftCircle className="text-[50px] text-primary cursor-pointer" />
           </div>
         )}
-        {count !== (story?.output?.chapters?.length || 0 - 1) && (
+
+        {count !== (story?.output?.chapters?.length || 0) && (
           <div
-            className="absolute -right-5 top-[250px]"
+            className="absolute -right-6 top-1/2 -translate-y-1/2"
             onClick={() => {
               bookRef.current?.pageFlip().flipNext();
               setCount(count + 1);
             }}
           >
-            <IoIosArrowDroprightCircle className="text-[40px] text-primary cursor-pointer" />
+            <IoIosArrowDroprightCircle className="text-[50px] text-primary cursor-pointer" />
           </div>
         )}
       </div>

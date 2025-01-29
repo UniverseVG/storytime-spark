@@ -31,3 +31,11 @@ export interface Chapter {
   altText: string;
   educationalNote: string;
 }
+
+export interface User {
+  id: number;
+  userName: string;
+  userEmail: string;
+  userImage: string;
+  credit: number;
+}
