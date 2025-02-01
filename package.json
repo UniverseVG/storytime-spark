@@ -28,6 +28,7 @@
     "firebase": "^11.2.0",
     "framer-motion": "^11.18.1",
     "next": "15.1.5",
+    "razorpay": "^2.9.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",

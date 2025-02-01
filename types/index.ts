@@ -39,3 +39,9 @@ export interface User {
   userImage: string;
   credit: number;
 }
+
+export interface Pricing {
+  id: number;
+  price: number;
+  credits: number;
+}

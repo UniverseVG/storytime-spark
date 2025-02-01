@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import StorySubjectInput from "../_components/createStory/StorySubjectInput";
 import StoryType from "../_components/createStory/StoryType";
 import AgeGroup from "../_components/createStory/AgeGroup";
@@ -10,10 +10,12 @@ import CustomLoader from "../_components/CustomLoader";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useUser } from "@clerk/nextjs";
-import { StoryData } from "@/config/schema";
+import { StoryData, Users } from "@/config/schema";
 import uuid4 from "uuid4";
 import { db } from "@/config/db";
 import { useRouter } from "next/navigation";
+import { UserDetailContext } from "../_context/UserDetailContext";
+import { eq } from "drizzle-orm";
 
 const CREATE_STORY_PROMPT = process.env.NEXT_PUBLIC_CREATE_STORY_PROMPT;
 
@@ -45,6 +47,9 @@ const Create = () => {
     toast.error(msg);
   };
   const { user } = useUser();
+  const context = useContext(UserDetailContext);
+  const userDetail = context?.userDetail;
+
   const onHandleUserSelection = (data: FieldData) => {
     setFormData((prev: FormData) => ({
       ...prev,
@@ -52,6 +57,10 @@ const Create = () => {
     }));
   };
   const GenerateStory = async () => {
+    if ((userDetail?.credit as number) <= 0) {
+      notifyError("You don't have enough credits to create a story");
+      return;
+    }
     setLoading(true);
     if (
       formData.storySubject === "" ||
@@ -111,8 +120,11 @@ const Create = () => {
       );
 
       if (response?.[0]?.storyId) {
-        notify("Story generated successfully");
-        router.replace(`/view-story/${response?.[0]?.storyId}`);
+        const updateUserCredit = await UpdateUserCredit();
+        if (updateUserCredit?.[0]?.id) {
+          notify("Story generated successfully");
+          router.replace(`/view-story/${response?.[0]?.storyId}`);
+        }
       }
       setLoading(false);
     } catch (e) {
@@ -145,6 +157,23 @@ const Create = () => {
       console.error(e);
     }
   };
+
+  const UpdateUserCredit = async () => {
+    try {
+      const result = await db
+        .update(Users)
+        .set({
+          credit: Number((userDetail?.credit as number) - 1),
+        })
+        .where(
+          eq(Users.userEmail, user?.primaryEmailAddress?.emailAddress as string)
+        )
+        .returning({ id: Users.id });
+      return result;
+    } catch (e) {
+      console.error(e);
+    }
+  };
   return (
     <div className="p-10 md:px-20 lg:px-40">
       <h2 className="font-extrabold text-[70px] text-primary text-center">
@@ -160,7 +189,7 @@ const Create = () => {
         <AgeGroup userSelection={onHandleUserSelection} />
         <ImageStyle userSelection={onHandleUserSelection} />
       </div>
-      <div className="flex justify-center my-10">
+      <div className="flex my-10 flex-col items-center gap-2">
         <Button
           color="primary"
           isDisabled={loading}
@@ -170,6 +199,9 @@ const Create = () => {
         >
           {loading ? "Generating your story..." : "Generate Story"}
         </Button>
+        <span className="text-sm text-left text-primary">
+          1 Credit per story generation
+        </span>
       </div>
       <CustomLoader isLoading={loading} />
     </div>

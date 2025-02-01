@@ -34,8 +34,6 @@ export const convertImage = async (imageUrl: string) => {
     const base64Image = Buffer.from(response.data).toString("base64");
     return base64Image;
   } catch (error) {
-    console.log("coming here");
-
     console.log("Error converting image:", { error });
   }
 };

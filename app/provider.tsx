@@ -10,9 +10,11 @@ import { db } from "@/config/db";
 import { Users } from "@/config/schema";
 import { eq } from "drizzle-orm";
 import { useUser } from "@clerk/nextjs";
+import { UserDetailContext } from "./_context/UserDetailContext";
+import { User } from "@/types";
 
 const NextProvider = ({ children }: { children: React.ReactNode }) => {
-  const [userDetail, setUserDetail] = useState<any>();
+  const [userDetail, setUserDetail] = useState<User>();
   const { user } = useUser();
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const NextProvider = ({ children }: { children: React.ReactNode }) => {
       );
 
     if (!userInfo?.[0]) {
-      const result: any = db
+      const result: any = await db
         .insert(Users)
         .values({
           userName: user?.fullName,
@@ -41,21 +43,20 @@ const NextProvider = ({ children }: { children: React.ReactNode }) => {
           userImage: Users?.userImage,
           credits: Users?.credit,
         });
-      console.log(result[0]);
-
       setUserDetail(result);
     } else {
-      console.log(userInfo?.[0]);
-      setUserDetail(userInfo?.[0]);
+      setUserDetail(userInfo?.[0] as User);
     }
   };
 
   return (
-    <HeroUIProvider>
-      <Header />
-      {children}
-      <ToastContainer />
-    </HeroUIProvider>
+    <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
+      <HeroUIProvider>
+        <Header />
+        {children}
+        <ToastContainer />
+      </HeroUIProvider>
+    </UserDetailContext.Provider>
   );
 };
 
