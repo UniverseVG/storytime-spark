@@ -151,7 +151,7 @@ const BuyCredits = () => {
       });
       paymentObject.open();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

@@ -11,29 +11,32 @@ import UserStorySkeleton from "../_components/dashboard/UserStorySkeleton";
 const ExploreStories = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     GetAllStories(0);
   }, []);
-  const GetAllStories = async (offsetValue: number) => {
+  const GetAllStories = async (offset: number) => {
+    setLoading(true);
+    setOffset(offset);
     try {
-      setOffset(offsetValue);
       const response = await db
         .select()
         .from(StoryData)
         .orderBy(desc(StoryData.id))
         .limit(4)
-        .offset(offsetValue);
+        .offset(offset);
       if (!response) return;
-
-      setStories((prev) => [...prev, ...(response as Story[])]);
+      setStories((prev) =>
+        offset === 0
+          ? (response as Story[])
+          : [...prev, ...(response as Story[])]
+      );
     } catch (error) {
       console.error("Error fetching stories:", error);
     } finally {
       setLoading(false);
     }
   };
-  console.log(stories);
 
   return (
     <div className="min-h-screen p-10 md:px-20 lg:px-40">
@@ -41,25 +44,27 @@ const ExploreStories = () => {
         Explore More Stories
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 mt-10">
-        {loading
-          ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
-              <UserStorySkeleton key={item} />
-            ))
-          : stories.map((story: Story) => (
-              <div key={story.id}>
-                <StoryItemCard story={story} />
-              </div>
-            ))}
+        {stories.map((story: Story, index) => (
+          <div key={index}>
+            <StoryItemCard story={story} />
+          </div>
+        ))}
+        {loading &&
+          [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+            <UserStorySkeleton key={item} />
+          ))}
       </div>
 
       <div className="flex items-center justify-center mt-10">
-        <Button
-          color="primary"
-          size="lg"
-          onClick={() => GetAllStories(offset + 4)}
-        >
-          Load More
-        </Button>
+        {!loading && (
+          <Button
+            color="primary"
+            size="lg"
+            onClick={() => GetAllStories(offset + 4)}
+          >
+            Load More
+          </Button>
+        )}
       </div>
     </div>
   );

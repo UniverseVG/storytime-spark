@@ -20,7 +20,7 @@ const Header = () => {
     { id: 1, name: "Home", path: "/" },
     { id: 2, name: "Create Story", path: "/create" },
     { id: 3, name: "Explore Stories", path: "/explore" },
-    { id: 4, name: "Contact Us", path: "/contact" },
+    // { id: 4, name: "Contact Us", path: "/contact" },
   ];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
