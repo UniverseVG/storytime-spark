@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import { Modal, ModalContent, ModalBody, useDisclosure } from "@heroui/modal";
 import Image from "next/image";

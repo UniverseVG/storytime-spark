@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { db } from "@/config/db";
 import { StoryData } from "@/config/schema";

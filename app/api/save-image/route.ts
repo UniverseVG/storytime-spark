@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ imageUrl: downloadURL });
 }
 
-export const convertImage = async (imageUrl: string) => {
+const convertImage = async (imageUrl: string) => {
   try {
     console.log("Converting image:", imageUrl);
 
