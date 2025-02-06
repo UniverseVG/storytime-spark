@@ -1,10 +1,14 @@
 import React from "react";
 import { Skeleton } from "@heroui/skeleton";
 import { Card } from "@heroui/card";
+
 const UserStorySkeleton = () => {
   return (
-    <div>
-      <Card className="w-[250px] h-[300px] space-y-5 p-4" radius="lg">
+    <div className="w-full lg:w-[250px]">
+      <Card
+        className="w-full lg:w-[250px] h-[300px] space-y-5 p-4 mx-auto"
+        radius="lg"
+      >
         <Skeleton className="rounded-lg">
           <div className="h-24 rounded-lg bg-default-300" />
         </Skeleton>

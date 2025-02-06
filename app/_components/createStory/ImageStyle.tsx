@@ -35,17 +35,24 @@ const ImageStyle = ({ userSelection }: any) => {
       fieldName: "imageStyle",
     });
   };
+
   return (
     <div>
-      <label className="text-primary text-4xl font-bold">4. Image Style</label>
-      <div className="grid grid-cols-3 gap-5 mt-3">
+      <label className="text-primary text-3xl sm:text-4xl font-bold">
+        4. Image Style
+      </label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-3">
         {OptionsList.map((item, index) => (
           <div
             key={index}
-            className={`relative grayscale hover:grayscale-0 p-1 ${selectedOption === item.label ? "grayscale-0 border-2 rounded-3xl border-primary" : "grayscale"} cursor-pointer transition-all duration-1000 ease-in-out`}
             onClick={() => onUserSelect(item)}
+            className={`relative grayscale hover:grayscale-0 p-1 cursor-pointer transition-all duration-1000 ease-in-out ${
+              selectedOption === item.label
+                ? "grayscale-0 border-2 rounded-3xl border-primary"
+                : "grayscale"
+            }`}
           >
-            <h2 className="absolute bottom-5 text-center text-2xl text-white w-full">
+            <h2 className="absolute bottom-2 sm:bottom-3 md:bottom-4 text-center text-base sm:text-lg md:text-xl lg:text-2xl text-white w-full">
               {item.label}
             </h2>
             <Image

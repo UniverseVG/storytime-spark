@@ -14,6 +14,11 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      screens: {
+        xs: "560px",
+        lg: "1160px",
+        sm:'896px'
+      },
     },
   },
   darkMode: "class",
@@ -23,9 +28,9 @@ export default {
         light: {
           // ...
           colors: {
-            primary:{
-              DEFAULT:"#5253A3"
-            }
+            primary: {
+              DEFAULT: "#5253A3",
+            },
           },
         },
         dark: {
