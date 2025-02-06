@@ -17,7 +17,7 @@ const ImageStyle = ({ userSelection }: any) => {
     },
     {
       label: "Water Color",
-      imageUrl: "/waterColor.png",
+      imageUrl: "/watercolor.png",
       isFree: true,
     },
     {
