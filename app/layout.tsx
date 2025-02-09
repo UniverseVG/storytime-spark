@@ -3,6 +3,7 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import NextProvider from "./provider";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 
 const myAppFont = Nunito({
   subsets: ["latin"],
@@ -22,7 +23,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={myAppFont.className} suppressHydrationWarning={true}>
-          <NextProvider>{children}</NextProvider>
+          <NextProvider>
+            {children}
+            <Analytics />
+          </NextProvider>
         </body>
       </html>
     </ClerkProvider>
