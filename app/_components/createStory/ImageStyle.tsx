@@ -46,9 +46,9 @@ const ImageStyle = ({ userSelection }: any) => {
           <div
             key={index}
             onClick={() => onUserSelect(item)}
-            className={`relative grayscale hover:grayscale-0 p-1 cursor-pointer transition-all duration-1000 ease-in-out ${
+            className={`relative grayscale hover:grayscale-0 cursor-pointer transition-all duration-1000 ease-in-out w-fit inline-block rounded-3xl ${
               selectedOption === item.label
-                ? "grayscale-0 border-2 rounded-3xl border-primary"
+                ? "grayscale-0 border-2 border-primary"
                 : "grayscale"
             }`}
           >
@@ -60,7 +60,7 @@ const ImageStyle = ({ userSelection }: any) => {
               alt={item.label}
               width={300}
               height={500}
-              className="object-cover h-[120px] rounded-3xl"
+              className="object-cover h-[120px] w-[300px] rounded-3xl"
             />
           </div>
         ))}
