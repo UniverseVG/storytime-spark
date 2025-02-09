@@ -20,7 +20,8 @@ const Header = () => {
     { id: 1, name: "Home", path: "/" },
     { id: 2, name: "Create Story", path: "/create" },
     { id: 3, name: "Explore Stories", path: "/explore" },
-    // { id: 4, name: "Contact Us", path: "/contact" },
+    { id: 4, name: "Pricing", path: "/pricing" },
+    { id: 5, name: "Contact Us", path: "/contact-us" },
   ];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
@@ -37,7 +38,7 @@ const Header = () => {
             width={100}
             height={100}
           />
-          <h2 className="font-bold text-2xl text-primary ml-2">
+          <h2 className="hidden sm:block font-bold text-2xl text-primary ml-2">
             StoryTime Spark
           </h2>
         </NavbarBrand>

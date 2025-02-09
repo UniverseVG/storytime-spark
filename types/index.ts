@@ -44,4 +44,5 @@ export interface Pricing {
   id: number;
   price: number;
   credits: number;
+  isPopular: boolean;
 }

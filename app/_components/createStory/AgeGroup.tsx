@@ -32,14 +32,19 @@ const AgeGroup = ({ userSelection }: any) => {
   return (
     <div>
       <label className="text-primary text-4xl font-bold">3. Age Group</label>
-      <div className="grid grid-cols-3 gap-5 mt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mt-3">
         {OptionsList.map((item, index) => (
           <div
             key={index}
-            className={`relative grayscale hover:grayscale-0 p-1 ${selectedOption === item.label ? "grayscale-0 border-2 rounded-3xl border-primary" : "grayscale"} cursor-pointer transition-all duration-1000 ease-in-out`}
+            className={`relative grayscale hover:grayscale-0 p-1 cursor-pointer transition-all duration-1000 ease-in-out ${
+              selectedOption === item.label
+                ? "grayscale-0 border-2 rounded-3xl border-primary"
+                : "grayscale"
+            }`}
             onClick={() => onUserSelect(item)}
           >
-            <h2 className="absolute bottom-5 text-center text-2xl text-white w-full">
+            {/* Responsive text overlay */}
+            <h2 className="absolute bottom-2 sm:bottom-3 md:bottom-5 text-center text-lg sm:text-xl md:text-2xl lg:text-3xl text-white w-full">
               {item.label}
             </h2>
             <Image

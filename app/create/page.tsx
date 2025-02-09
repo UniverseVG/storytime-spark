@@ -56,6 +56,7 @@ const Create = () => {
       [data.fieldName]: data.fieldValue,
     }));
   };
+
   const GenerateStory = async () => {
     if ((userDetail?.credit as number) <= 0) {
       notifyError("You don't have enough credits to create a story");
@@ -174,35 +175,42 @@ const Create = () => {
       console.error(e);
     }
   };
+
   return (
-    <div className="p-10 md:px-20 lg:px-40">
-      <h2 className="font-extrabold text-[70px] text-primary text-center">
+    <div className="container mx-auto p-6 sm:p-10 md:px-20 lg:px-40">
+      {/* Page Heading */}
+      <h2 className="font-extrabold text-center text-4xl sm:text-5xl md:text-6xl lg:text-[70px] text-primary">
         Create Story
       </h2>
-      <p className="text-center text-2xl text-primary">
-        Unlock your creativity with AI: Craft stories like never before!Let our
+      <p className="text-center mt-4 text-base sm:text-lg md:text-2xl text-primary">
+        Unlock your creativity with AI: Craft stories like never before! Let our
         AI bring your imagination to life, one story at a time.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-14">
+
+      {/* Form Components */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10">
         <StorySubjectInput userSelection={onHandleUserSelection} />
         <StoryType userSelection={onHandleUserSelection} />
         <AgeGroup userSelection={onHandleUserSelection} />
         <ImageStyle userSelection={onHandleUserSelection} />
       </div>
-      <div className="flex my-10 flex-col items-center gap-2">
+
+      {/* Generate Story Button */}
+      <div className="flex flex-col items-center gap-4 my-10">
         <Button
           color="primary"
           isDisabled={loading}
-          className="p-10 text-2xl"
+          className="px-6 py-4 text-lg sm:text-2xl"
           onClick={GenerateStory}
           isLoading={loading}
         >
           {loading ? "Generating your story..." : "Generate Story"}
         </Button>
-        <span className="text-sm text-left text-primary">
+        <span className="text-sm text-primary">
           1 Credit per story generation
         </span>
       </div>
+
       <CustomLoader isLoading={loading} />
     </div>
   );

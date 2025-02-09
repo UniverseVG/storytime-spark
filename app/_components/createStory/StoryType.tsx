@@ -27,7 +27,9 @@ const StoryType = ({ userSelection }: any) => {
       isFree: true,
     },
   ];
+
   const [selectedOption, setSelectedOption] = useState<string>("");
+
   const onUserSelect = (data: OptionField) => {
     setSelectedOption(data.label);
     userSelection({
@@ -35,17 +37,24 @@ const StoryType = ({ userSelection }: any) => {
       fieldName: "storyType",
     });
   };
+
   return (
     <div>
-      <label className="text-primary text-4xl font-bold">2. Story Type</label>
-      <div className="grid grid-cols-3 gap-5 mt-3">
+      <label className="text-primary text-3xl sm:text-4xl font-bold">
+        2. Story Type
+      </label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mt-3">
         {OptionsList.map((item, index) => (
           <div
             key={index}
-            className={`relative grayscale hover:grayscale-0 p-1 ${selectedOption === item.label ? "grayscale-0 border-2 rounded-3xl border-primary" : "grayscale"} cursor-pointer transition-all duration-1000 ease-in-out`}
             onClick={() => onUserSelect(item)}
+            className={`relative p-1 cursor-pointer transition-all duration-1000 ease-in-out ${
+              selectedOption === item.label
+                ? "grayscale-0 border-2 rounded-3xl border-primary"
+                : "grayscale hover:grayscale-0"
+            }`}
           >
-            <h2 className="absolute bottom-5 text-center text-2xl text-white w-full">
+            <h2 className="absolute bottom-2 sm:bottom-3 md:bottom-5 text-center text-base sm:text-xl md:text-2xl lg:text-3xl text-white w-full">
               {item.label}
             </h2>
             <Image
@@ -53,7 +62,7 @@ const StoryType = ({ userSelection }: any) => {
               alt={item.label}
               width={300}
               height={500}
-              className="object-cover h-[260px] rounded-3xl"
+              className="object-cover h-[200px] sm:h-[240px] md:h-[260px] rounded-3xl"
             />
           </div>
         ))}
