@@ -33,10 +33,6 @@ export default {
             },
           },
         },
-        dark: {
-          // ...
-          colors: {},
-        },
         // ... custom themes
       },
     }),
