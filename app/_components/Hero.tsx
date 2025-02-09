@@ -1,9 +1,11 @@
+"use client";
 import { Button } from "@heroui/button";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const Hero = () => {
+  const router = useRouter();
   return (
     <div className="px-6 md:px-28 lg:px-44 mt-10 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -16,15 +18,15 @@ const Hero = () => {
             child&apos;s imagination and spark their curiosity for new ideas. It
             only takes a few simple steps to get started.
           </p>
-          <Link href={"/create"}>
-            <Button
-              size="lg"
-              color="primary"
-              className="mt-4 sm:mt-5 font-bold text-base sm:text-lg md:text-xl lg:text-2xl p-4 sm:p-6 md:p-8"
-            >
-              Create Story
-            </Button>
-          </Link>
+
+          <Button
+            size="lg"
+            color="primary"
+            className="mt-4 sm:mt-5 font-bold text-base sm:text-lg md:text-xl lg:text-2xl p-4 sm:p-6 md:p-8"
+            onPress={() => router.push("/create")}
+          >
+            Create Story
+          </Button>
         </div>
         <div className="flex justify-center">
           <Image

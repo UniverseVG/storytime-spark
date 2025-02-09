@@ -13,9 +13,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@heroui/button";
 import { UserButton, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const { isSignedIn } = useUser();
+  const router = useRouter();
   const MenuList = [
     { id: 1, name: "Home", path: "/" },
     { id: 2, name: "Create Story", path: "/create" },
@@ -67,11 +69,14 @@ const Header = () => {
           ))}
         </NavbarContent>
 
-        <Link href="/dashboard">
-          <Button color="primary">
-            {isSignedIn ? "Dashboard" : "Get Started"}
-          </Button>
-        </Link>
+        <Button
+          color="primary"
+          onPress={() => {
+            router.push("/dashboard");
+          }}
+        >
+          {isSignedIn ? "Dashboard" : "Get Started"}
+        </Button>
 
         <UserButton />
       </NavbarContent>

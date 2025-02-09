@@ -3,12 +3,13 @@ import { UserDetailContext } from "@/app/_context/UserDetailContext";
 import { Button } from "@heroui/button";
 import { Skeleton } from "@heroui/skeleton";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useContext } from "react";
 
 const DashboardHeader = () => {
   const context = useContext(UserDetailContext);
   const userDetail = context?.userDetail;
+  const router = useRouter();
 
   return (
     <div className="p-5 md:p-7 bg-primary text-white flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-start md:items-center rounded-xl md:rounded-2xl">
@@ -46,14 +47,15 @@ const DashboardHeader = () => {
         </div>
 
         {/* Buy Credits Button - Full width on mobile */}
-        <Link href={"/buy-credits"} className="w-full md:w-auto">
+        <div className="w-full md:w-auto">
           <Button
             className="text-base md:text-lg w-full md:w-auto bg-blue-400 hover:bg-blue-500 transition-colors"
             color="secondary"
+            onPress={() => router.push("/buy-credits")}
           >
             Buy Credits
           </Button>
-        </Link>
+        </div>
       </div>
     </div>
   );
