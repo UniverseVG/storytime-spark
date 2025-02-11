@@ -137,6 +137,7 @@ const Contact = () => {
             key="General Inquiry"
             className="text-gray-900 hover:bg-gray-100"
             value={"General Inquiry"}
+            textValue="General Inquiry"
           >
             General Inquiry
           </SelectItem>
@@ -144,6 +145,7 @@ const Contact = () => {
             key="Technical Support"
             className="text-gray-900 hover:bg-gray-100"
             value={"Technical Support"}
+            textValue="Technical Support"
           >
             Technical Support
           </SelectItem>
@@ -151,6 +153,7 @@ const Contact = () => {
             key="Product Feedback"
             className="text-gray-900 hover:bg-gray-100"
             value={"Product Feedback"}
+            textValue="Product Feedback"
           >
             Product Feedback
           </SelectItem>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -10,10 +10,10 @@ import {
   NavbarMenuToggle,
 } from "@heroui/navbar";
 import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@heroui/button";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { Link } from "@heroui/react";
 
 const Header = () => {
   const { isSignedIn } = useUser();
@@ -25,13 +25,14 @@ const Header = () => {
     { id: 4, name: "Pricing", path: "/pricing" },
     { id: 5, name: "Contact Us", path: "/contact-us" },
   ];
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useReducer((current) => !current, false);
   return (
     <Navbar maxWidth="full" onMenuOpenChange={setIsMenuOpen} position="sticky">
       <NavbarContent>
         <NavbarMenuToggle
           className="block lg:hidden"
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setIsMenuOpen()}
         />
         <NavbarBrand>
           <Image
