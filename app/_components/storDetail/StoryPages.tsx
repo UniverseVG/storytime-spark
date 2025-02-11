@@ -7,7 +7,7 @@ interface StoryPagesProps {
 
 const StoryPages = ({ storyChapter }: StoryPagesProps) => {
   return (
-    <div>
+    <div className="h-[400px] md:h-[450px] overflow-y-scroll scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-100 p-4">
       <h2 className="text-2xl font-bold text-primary mb-4">
         {storyChapter.chapterTitle}
       </h2>
