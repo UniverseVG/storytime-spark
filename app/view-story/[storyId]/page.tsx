@@ -31,7 +31,7 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const [narrating, setNarrating] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string>("");
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768); // Detect small screens (less than 768px)
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
 
   // Update screen size state on window resize
   useEffect(() => {
@@ -151,13 +151,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   };
 
   // Predefined list of high-quality voices
-  const bestVoices = [
-    "Google UK English Male",
-    "Google US English Female",
-    "Microsoft Zira",
-    "Microsoft David",
-    "Google UK English Female",
-  ];
 
   return (
     <div className="p-4 md:p-10 md:px-12 lg:px-20">
@@ -191,17 +184,15 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
               value={selectedVoice}
               onChange={(e) => setSelectedVoice(e.target.value)}
             >
-              {voices
-                .filter((voice) => bestVoices.includes(voice.name))
-                .map((voice) => (
-                  <SelectItem
-                    key={voice.voiceURI}
-                    className="text-gray-900 hover:bg-gray-100"
-                    textValue={voice.name}
-                  >
-                    {voice.name} ({voice.lang})
-                  </SelectItem>
-                ))}
+              {voices.map((voice) => (
+                <SelectItem
+                  key={voice.voiceURI}
+                  className="text-gray-900 hover:bg-gray-100"
+                  textValue={voice.name}
+                >
+                  {voice.name} ({voice.lang})
+                </SelectItem>
+              ))}
             </Select>
           </div>
           <div>
