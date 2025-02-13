@@ -31,10 +31,11 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const [narrating, setNarrating] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string>("");
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  // Update screen size state on window resize
   useEffect(() => {
+    setIsSmallScreen(window.innerWidth < 768);
+
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth < 768);
     };

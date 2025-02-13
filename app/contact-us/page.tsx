@@ -38,8 +38,7 @@ const Contact = () => {
         process.env.NEXT_PUBLIC_PUBLIC_KEY!
       )
       .then(
-        (result) => {
-          console.info(result.text);
+        () => {
           notify("Message sent successfully");
           setFormData({
             name: "",
@@ -48,8 +47,7 @@ const Contact = () => {
             message: "",
           });
         },
-        (error) => {
-          console.error(error.text);
+        () => {
           notifyError("Error sending message");
           setFormData({
             name: "",
