@@ -38,7 +38,7 @@ const LastPage = () => {
 
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-[90%] bg-gradient-to-r from-primary-800 to-primary-900 shadow-[4px_0_8px_rgba(0,0,0,0.3)] rounded-r-lg" />
 
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2cpIi8+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iNTAwJSIgY3k9IjUwMCUiIHI9IjYwMCUiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC41LDAuNSkgcm90YXRlKDApIHNjYWxlKDAuNSwxKSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0icmdiYSgyNTUsMjQxLDIwNiwwLjQpIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSJyZ2JhKDI1NSwyNDEsMjA2LDAuMikiLz48L3JhZGlhbEdyYWRpZW50PjwvZGVmcz48L3N2Zz4=')] opacity-20 pointer-events-none" />
+      <div className="absolute inset-0  opacity-20 pointer-events-none" />
 
       <div className="relative z-10 text-center">
         <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary-900 mb-8 tracking-wider animate-fade-in">
@@ -51,7 +51,7 @@ const LastPage = () => {
         </p>
 
         <Button
-          onClick={handleShare}
+          onPress={handleShare}
           color="primary"
           className="hover:bg-primary-700 text-primary-50 px-8 py-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group-hover/lastpage:-rotate-1"
         >
