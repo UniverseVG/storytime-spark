@@ -51,7 +51,7 @@ const BookCoverPage = ({
       </div>
 
       {title && (
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary-900 text-center tracking-wider">
+        <h1 className="text-2xl md:text-3xl font-serif font-bold text-primary-900 text-center tracking-wider">
           {title}
         </h1>
       )}
