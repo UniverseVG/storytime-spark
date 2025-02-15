@@ -8,6 +8,7 @@ const LastPage = () => {
   const notify = (msg: string) => {
     toast(msg, {});
   };
+
   const handleShare = async () => {
     const shareData = {
       title: "Check out this story!",
@@ -16,16 +17,40 @@ const LastPage = () => {
     };
 
     if (navigator.share) {
+      // Use Web Share API if available
       try {
         await navigator.share(shareData);
       } catch (error: any) {
         if (error.name !== "AbortError") {
           console.error("Error sharing:", error);
+          notify("Failed to share. Please try again.");
         }
       }
     } else {
-      navigator.clipboard.writeText(shareData.url);
-      notify("Link copied to clipboard!");
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareData.url);
+          notify("Link copied to clipboard!");
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = shareData.url;
+          textarea.style.position = "fixed";
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          const successful = document.execCommand("copy");
+          document.body.removeChild(textarea);
+
+          if (successful) {
+            notify("Link copied to clipboard!");
+          } else {
+            notify("Failed to copy link. Please copy it manually.");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to copy link: ", error);
+        notify("Failed to copy link. Please copy it manually.");
+      }
     }
   };
 
@@ -38,7 +63,7 @@ const LastPage = () => {
 
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-[90%] bg-gradient-to-r from-primary-800 to-primary-900 shadow-[4px_0_8px_rgba(0,0,0,0.3)] rounded-r-lg" />
 
-      <div className="absolute inset-0  opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 opacity-20 pointer-events-none" />
 
       <div className="relative z-10 text-center">
         <h2 className="text-4xl md:text-5xl font-serif font-bold text-primary-900 mb-8 tracking-wider animate-fade-in">
@@ -53,14 +78,14 @@ const LastPage = () => {
         <Button
           onPress={handleShare}
           color="primary"
-          className="hover:bg-primary-700 text-primary-50 px-8 py-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group-hover/lastpage:-rotate-1"
+          className="hover:bg-primary-700 text-primary-50 px-8 py-4 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
         >
           <MdShare className="inline-block mr-2 text-xl transition-transform group-hover:rotate-12" />
           <span className="font-serif tracking-wider">Share This Story</span>
         </Button>
       </div>
 
-      <div className="absolute bottom-8 right-8 opacity-20 w-12 h-12 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBkPSJNNTAgMTIuNUwzNi44IDQwLjZMMCA0NS44bDI1IDI4LjctNi4zIDM0LjdMNTAgODIuNWwyOS4zIDIxLjdMNzMgNzAuNSA5OCA0NS44IDYzLjIgNDAuNnoiIGZpbGw9IiM1MjUzQTMiLz48L3N2Zw==')]" />
+      <div className="absolute bottom-8 right-8 opacity-20 w-12 h-12" />
     </div>
   );
 };

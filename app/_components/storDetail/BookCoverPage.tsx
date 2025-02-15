@@ -14,7 +14,7 @@ const BookCoverPage = ({
 }: BookCoverPageProps) => {
   return (
     <div
-      className={`relative bg-primary-50 p-8 md:p-12 border-4 border-primary-900 
+      className={`relative bg-primary-50 p-8 md:p-12 border-4 border-primary-900
                 transform perspective-1000 rotate-y-0 ${height}
                 before:absolute before:inset-0
                 before:opacity-20 before:pointer-events-none
