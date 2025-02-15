@@ -34,7 +34,7 @@ const Header = () => {
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           onClick={() => setIsMenuOpen()}
         />
-        <NavbarBrand>
+        <NavbarBrand onClick={() => router.replace("/")} className="cursor-pointer">
           <Image
             src="/storytime-spark.png"
             alt="Logo"
