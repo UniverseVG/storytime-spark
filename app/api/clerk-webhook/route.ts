@@ -2,25 +2,58 @@ import type { WebhookEvent } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { Users } from "@/config/schema";
 import { db } from "@/config/db";
+import { headers } from "next/headers";
+import { Webhook } from "svix";
 
 export async function POST(req: Request) {
   try {
-    const evt = (await req.json()) as WebhookEvent;
-    console.log({ evt });
+    const WEBHOOK_SECRET = process.env.NEXT_PUBLIC_CLERK_SECRET;
 
+    if (!WEBHOOK_SECRET) {
+      console.error("Webhook secret is missing in environment variables.");
+      return NextResponse.json(
+        { error: "Server misconfiguration" },
+        { status: 500 }
+      );
+    }
+
+    const headerPayload = await headers();
+    const svixId = headerPayload.get("svix-id");
+    const svixTimestamp = headerPayload.get("svix-timestamp");
+    const svixSignature = headerPayload.get("svix-signature");
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await req.text();
+
+    try {
+      const wh = new Webhook(WEBHOOK_SECRET);
+      wh.verify(payload, {
+        "svix-id": svixId,
+        "svix-timestamp": svixTimestamp,
+        "svix-signature": svixSignature,
+      });
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const evt = JSON.parse(payload) as WebhookEvent;
     const { id: clerkUserId } = evt.data;
 
-    if (!clerkUserId)
+    if (!clerkUserId) {
       return NextResponse.json(
         { error: "No user ID provided" },
         { status: 400 }
       );
+    }
 
     let user = null;
 
     switch (evt.type) {
       case "user.created": {
-        console.log("coming here", evt);
         const { email_addresses, image_url, first_name, last_name } = evt.data;
         user = await db
           .insert(Users)
@@ -30,10 +63,10 @@ export async function POST(req: Request) {
             userImage: image_url || null,
           })
           .returning({
-            userEmail: Users?.userEmail,
-            userName: Users?.userName,
-            userImage: Users?.userImage,
-            credits: Users?.credit,
+            userEmail: Users.userEmail,
+            userName: Users.userName,
+            userImage: Users.userImage,
+            credits: Users.credit,
           });
 
         break;
