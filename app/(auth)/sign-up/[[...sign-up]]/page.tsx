@@ -14,7 +14,7 @@ export default function Page() {
         />
       </div>
       <div className="flex items-center justify-center h-screen order-first md:order-last mt-10 md:mt-0">
-        <SignUp />
+        <SignUp afterSignUpUrl={"/dashboard"} />
       </div>
     </div>
   );

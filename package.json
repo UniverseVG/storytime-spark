@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -29,7 +29,7 @@
     "drizzle-orm": "^0.38.4",
     "firebase": "^11.2.0",
     "framer-motion": "^11.18.1",
-    "next": "15.1.5",
+    "next": "^15.1.7",
     "razorpay": "^2.9.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

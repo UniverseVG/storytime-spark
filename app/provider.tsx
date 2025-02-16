@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { HeroUIProvider } from "@heroui/react";
@@ -7,46 +5,43 @@ import React, { useEffect, useState } from "react";
 import Header from "./_components/Header";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-import { db } from "@/config/db";
-import { Users } from "@/config/schema";
-import { eq } from "drizzle-orm";
 import { useUser } from "@clerk/nextjs";
 import { UserDetailContext } from "./_context/UserDetailContext";
 import { User } from "@/types";
 
 const NextProvider = ({ children }: { children: React.ReactNode }) => {
-  const [userDetail, setUserDetail] = useState<User>();
+  const [userDetail, setUserDetail] = useState<User | undefined>(undefined);
   const { user } = useUser();
 
   useEffect(() => {
-    if (!user) return;
-    saveNewUserIfNotExists();
+    if (user) {
+      saveNewUserIfNotExists();
+    }
   }, [user]);
-  const saveNewUserIfNotExists = async () => {
-    const userInfo = await db
-      .select()
-      .from(Users)
-      .where(
-        eq(Users.userEmail, user?.primaryEmailAddress?.emailAddress as string)
-      );
 
-    if (!userInfo?.[0]) {
-      const result: any = await db
-        .insert(Users)
-        .values({
-          userName: user?.fullName,
-          userEmail: user?.primaryEmailAddress?.emailAddress,
-          userImage: user?.imageUrl,
-        })
-        .returning({
-          userEmail: Users?.userEmail,
-          userName: Users?.userName,
-          userImage: Users?.userImage,
-          credits: Users?.credit,
-        });
-      setUserDetail(result);
-    } else {
-      setUserDetail(userInfo?.[0] as User);
+  const saveNewUserIfNotExists = async () => {
+    try {
+      const response = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user?.primaryEmailAddress?.emailAddress,
+          name: user?.fullName,
+          image: user?.imageUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to fetch user:", await response.json());
+        return;
+      }
+
+      const data = await response.json();
+      setUserDetail(data.user);
+    } catch (error) {
+      console.error("Error calling API:", error);
     }
   };
 
