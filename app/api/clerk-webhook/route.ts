@@ -7,7 +7,7 @@ import { Webhook } from "svix";
 
 export async function POST(req: Request) {
   try {
-    const WEBHOOK_SECRET = process.env.NEXT_PUBLIC_CLERK_SECRET;
+    const WEBHOOK_SECRET = process.env.SIGNING_SECRET || "";
 
     if (!WEBHOOK_SECRET) {
       console.error("Webhook secret is missing in environment variables.");
