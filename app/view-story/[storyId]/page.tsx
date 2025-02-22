@@ -34,58 +34,39 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
+  const selectedVoiceRef = useRef(selectedVoice);
+  useEffect(() => {
+    selectedVoiceRef.current = selectedVoice;
+  }, [selectedVoice]);
+
   useEffect(() => {
     setIsSmallScreen(window.innerWidth < 768);
-
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth < 768);
     };
-
     window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load voices when the component mounts
+  // Load voices on mount
   useEffect(() => {
     const synth = window.speechSynthesis;
-
-    // Function to load voices
     const loadVoices = () => {
       const availableVoices = synth.getVoices();
       setVoices(availableVoices);
-
-      // Set the default voice if not already set
-      if (availableVoices.length > 0 && !selectedVoice) {
-        const defaultVoice = availableVoices.find(
-          (voice) => voice.name === "Google UK English Male"
-        );
-        setSelectedVoice(
-          defaultVoice ? defaultVoice.name : availableVoices[0].name
-        );
-      }
     };
-
     loadVoices();
     synth.addEventListener("voiceschanged", loadVoices);
-
     return () => {
       synth.removeEventListener("voiceschanged", loadVoices);
-      synth.cancel(); // Stop narration on unmount
+      synth.cancel();
     };
-  }, [selectedVoice]);
+  }, []);
 
-  // Stop narration on page refresh or navigation
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      window.speechSynthesis.cancel();
-    };
-
+    const handleBeforeUnload = () => window.speechSynthesis.cancel();
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   // Fetch story data
@@ -126,7 +107,7 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
 
     const chapter = story.output.chapters[chapterIndex];
     const utterance = new SpeechSynthesisUtterance(chapter.storyText);
-    const voice = voices.find((v) => v.name === selectedVoice);
+    const voice = voices.find((v) => v.name === selectedVoiceRef.current);
     if (voice) {
       utterance.voice = voice;
     }
@@ -136,7 +117,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
         narrateChapter(chapterIndex + 1);
       }, 500);
     };
-
     window.speechSynthesis.speak(utterance);
   };
   // Play narration
@@ -182,7 +162,18 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
               }
               itemHeight={60}
               value={selectedVoice}
-              onChange={(e) => setSelectedVoice(e.target.value)}
+              onChange={(e) => {
+                const newVoice = e.target.value;
+                selectedVoiceRef.current = newVoice;
+                setSelectedVoice(newVoice);
+                if (narrating) {
+                  window.speechSynthesis.cancel();
+                  const startChapter = count === 0 ? 0 : count - 1;
+                  setTimeout(() => {
+                    narrateChapter(startChapter);
+                  }, 200);
+                }
+              }}
             >
               {voices.map((voice, index) => (
                 <SelectItem
@@ -206,7 +197,10 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
             ) : (
               <button
                 onClick={handlePlayNarration}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                disabled={!selectedVoice}
+                className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
+                  !selectedVoice ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 Play Narration
               </button>
