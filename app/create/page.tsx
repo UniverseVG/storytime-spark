@@ -94,20 +94,20 @@ const Create = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: `Generate a detailed and vibrant book cover based on "${storyTitle?.cover?.imagePrompt}", reflecting the book's genre. Ensure the title "${storyTitle?.bookTitle}" is overlaid in bold, elegant text at the center or top of the image for a professional look.`,
+          prompt: `A vibrant, animated kids' book cover based on '${storyTitle?.cover?.imagePrompt}', reflecting its genre. The title '${storyTitle?.bookTitle}' must appear boldly at the center or top, blending seamlessly with the design`,
         }),
       });
 
       const imageData = await imageResponse.json();
 
-      const imageUrl = imageData?.data?.[0]?.url;
+      const imageUrl = imageData?.image;
       if (!imageUrl) {
         notifyError("Something went wrong, please try again");
         setLoading(false);
         return;
       }
       const storeImage = await axios.post("/api/save-image", {
-        url: imageUrl,
+        base64Image: imageUrl,
       });
 
       if (!storeImage?.data?.imageUrl) {

@@ -1,39 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
 import { storage } from "@/config/firebaseConfig";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { url } = body;
-
-  const base64Image = "data:image/png;base64," + (await convertImage(url));
-  console.log({ base64Image });
-
-  const fileName = `/storytime-ai/${Date.now()}.png`;
-  const imageRef = ref(storage, fileName);
-
-  await uploadString(imageRef, base64Image, "data_url").then((snapshot) => {
-    console.log("Uploaded a blob or file!", snapshot);
-  });
-
-  const downloadURL = await getDownloadURL(imageRef);
-  console.log(downloadURL);
-
-  return NextResponse.json({ imageUrl: downloadURL });
-}
-
-const convertImage = async (imageUrl: string) => {
   try {
-    console.log("Converting image:", imageUrl);
+    const body = await req.json();
+    const { base64Image } = body;
+    if (!base64Image) {
+      return NextResponse.json(
+        { error: "No image data provided" },
+        { status: 400 }
+      );
+    }
 
-    const response = await axios.get(imageUrl, {
-      responseType: "arraybuffer",
+    const fileName = `/storytime-ai/${Date.now()}.png`;
+    const imageRef = ref(storage, fileName);
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+
+    await uploadString(imageRef, base64Data, "base64").then((snapshot) => {
+      console.log("Uploaded a base64 image!", snapshot);
     });
 
-    const base64Image = Buffer.from(response.data).toString("base64");
-    return base64Image;
+    const downloadURL = await getDownloadURL(imageRef);
+
+    return NextResponse.json({ imageUrl: downloadURL });
   } catch (error) {
-    console.log("Error converting image:", { error });
+    return NextResponse.json(
+      { error: "Failed to upload image", details: error },
+      { status: 500 }
+    );
   }
-};
+}
