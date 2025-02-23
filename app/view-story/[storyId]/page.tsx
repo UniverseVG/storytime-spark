@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
@@ -10,6 +9,7 @@ import {
   IoIosArrowDroprightCircle,
 } from "react-icons/io";
 import { Skeleton } from "@heroui/skeleton";
+import { Select, SelectItem } from "@heroui/select";
 import BookCoverPage from "@/app/_components/storDetail/BookCoverPage";
 import LastPage from "@/app/_components/storDetail/LastPage";
 import StoryPages from "@/app/_components/storDetail/StoryPages";
@@ -17,59 +17,108 @@ import { db } from "@/config/db";
 import { StoryData } from "@/config/schema";
 import { eq } from "drizzle-orm";
 import { use } from "react";
-import { Select, SelectItem } from "@heroui/react";
-import { MdRecordVoiceOver } from "react-icons/md";
-import { Chapter, Story } from "@/types";
 import Image from "next/image";
+import { Chapter, Story } from "@/types";
+import { MdRecordVoiceOver } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const resolvedParams = use(params);
   const bookRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const narratingRef = useRef(false);
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
   const [count, setCount] = useState(0);
-
   const [narrating, setNarrating] = useState(false);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("en-US");
+  const [selectedVoiceType, setSelectedVoiceType] = useState("Neural2");
+  const [selectedVoice, setSelectedVoice] = useState("");
 
-  const selectedVoiceRef = useRef(selectedVoice);
+  const notifyError = (msg: string) => {
+    toast.error(msg);
+  };
+
+  // Define available languages
+  const languageOptions = ["en-US", "en-AU", "en-IN", "en-GB"];
+
+  // Define available voice types
+  const voiceTypeOptions = [
+    "Neural2",
+    "Studio",
+    "Chirp HD",
+    "Polyglot",
+    "News",
+    "Basic",
+    "WaveNet",
+  ];
+
+  // Mapping of voice type to available voice suffixes.
+  // For "Basic" we use "Standard" as the prefix.
+  const voiceTypeMapping: { [key: string]: string[] } = {
+    Neural2: ["Neural2-A", "Neural2-C", "Neural2-D", "Neural2-E"],
+    Studio: ["Studio-O", "Studio-Q"],
+    "Chirp HD": ["Chirp-HD-D", "Chirp-HD-F", "Chirp-HD-Q"],
+    Polyglot: ["Polyglot-1"],
+    News: ["News-K", "News-L", "News-N"],
+    Basic: [
+      "Standard-A",
+      "Standard-B",
+      "Standard-C",
+      "Standard-D",
+      "Standard-E",
+      "Standard-F",
+      "Standard-G",
+      "Standard-H",
+      "Standard-I",
+      "Standard-J",
+    ],
+    WaveNet: [
+      "Wavenet-A",
+      "Wavenet-B",
+      "Wavenet-C",
+      "Wavenet-D",
+      "Wavenet-E",
+      "Wavenet-F",
+      "Wavenet-G",
+      "Wavenet-H",
+      "Wavenet-I",
+      "Wavenet-J",
+    ],
+  };
+
+  // Compute available voice names based on the selected language and voice type.
+  const availableVoiceNames = voiceTypeMapping[selectedVoiceType].map(
+    (suffix) => `${selectedLanguage}-${suffix}`
+  );
+
+  // On mount, set default voice to the first option.
   useEffect(() => {
-    selectedVoiceRef.current = selectedVoice;
-  }, [selectedVoice]);
+    setSelectedVoice(availableVoiceNames[0]);
+  }, [selectedLanguage, selectedVoiceType]);
 
+  // Set screen size flag for responsive book dimensions
   useEffect(() => {
     setIsSmallScreen(window.innerWidth < 768);
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 768);
-    };
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Load voices on mount
+  // Disable keyboard navigation (arrow keys) during narration
   useEffect(() => {
-    const synth = window.speechSynthesis;
-    const loadVoices = () => {
-      const availableVoices = synth.getVoices();
-      setVoices(availableVoices);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (narrating && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+      }
     };
-    loadVoices();
-    synth.addEventListener("voiceschanged", loadVoices);
-    return () => {
-      synth.removeEventListener("voiceschanged", loadVoices);
-      synth.cancel();
-    };
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [narrating]);
 
-  useEffect(() => {
-    const handleBeforeUnload = () => window.speechSynthesis.cancel();
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
-
-  // Fetch story data
+  // Fetch the story from the database
   useEffect(() => {
     getStory();
   }, []);
@@ -91,14 +140,17 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     }
   };
 
-  // Narrate a chapter
-  const narrateChapter = (chapterIndex: number) => {
+  // Recursively narrate each chapter by fetching audio via your TTS API.
+  const narrateChapter = async (chapterIndex: number) => {
+    if (!narratingRef.current) return;
     if (!story || !story.output?.chapters) return;
     if (chapterIndex >= story.output.chapters.length) {
       setNarrating(false);
+      narratingRef.current = false;
       return;
     }
 
+    // Flip to the correct page
     const targetPage = chapterIndex + 1;
     if (count !== targetPage) {
       bookRef.current?.pageFlip().flip(targetPage);
@@ -106,30 +158,64 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     }
 
     const chapter = story.output.chapters[chapterIndex];
-    const utterance = new SpeechSynthesisUtterance(chapter.storyText);
-    const voice = voices.find((v) => v.name === selectedVoiceRef.current);
-    if (voice) {
-      utterance.voice = voice;
+    try {
+      const response = await fetch("/api/google-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: chapter.storyText,
+          voice: {
+            languageCode: selectedLanguage,
+            name: selectedVoice,
+          },
+        }),
+      });
+
+      const data: any = await response.json();
+
+      if (!data.audioContent) {
+        notifyError(
+          "An error occurred: " +
+            data.error.message +
+            ". Please try different voice."
+        );
+        return;
+      }
+
+      const audio = new Audio(`data:audio/wav;base64,${data.audioContent}`);
+      audioRef.current = audio;
+      await audio.play();
+      audio.onended = () => {
+        if (!narratingRef.current) return;
+        timeoutRef.current = setTimeout(() => {
+          if (narratingRef.current) narrateChapter(chapterIndex + 1);
+        }, 500);
+      };
+    } catch (error: any) {
+      console.error("Error narrating chapter:", error);
     }
-    utterance.rate = 1;
-    utterance.onend = () => {
-      setTimeout(() => {
-        narrateChapter(chapterIndex + 1);
-      }, 500);
-    };
-    window.speechSynthesis.speak(utterance);
   };
-  // Play narration
+
+  // When starting narration, determine the starting chapter based on the current page.
   const handlePlayNarration = () => {
     const startChapter = count === 0 ? 0 : count - 1;
     setNarrating(true);
+    narratingRef.current = true;
     narrateChapter(startChapter);
   };
 
-  // Stop narration
+  // Stop narration by pausing current audio and clearing any pending timeouts.
   const handleStopNarration = () => {
-    window.speechSynthesis.cancel();
     setNarrating(false);
+    narratingRef.current = false;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
   };
 
   return (
@@ -142,80 +228,137 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
         )}
       </h2>
 
-      {/* Narration Controls */}
       {!loading && (
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 my-4">
-          <div className="w-full md:w-1/2">
-            <Select
-              aria-label="Select a voice"
-              placeholder="Select a voice"
-              classNames={{
-                trigger:
-                  "bg-gray-50 border-gray-200 hover:bg-gray-100 data-[focus=true]:bg-gray-100 min-w-[300px]",
-                value: "text-gray-900 text-sm",
-                label: "text-gray-700 font-medium",
-                popoverContent: "bg-white border-gray-200",
-              }}
-              size="lg"
-              startContent={
-                <MdRecordVoiceOver className="text-xl text-[#5253A3]/80 mr-2" />
-              }
-              itemHeight={60}
-              value={selectedVoice}
-              onChange={(e) => {
-                const newVoice = e.target.value;
-                selectedVoiceRef.current = newVoice;
-                setSelectedVoice(newVoice);
-                if (narrating) {
-                  window.speechSynthesis.cancel();
-                  const startChapter = count === 0 ? 0 : count - 1;
-                  setTimeout(() => {
-                    narrateChapter(startChapter);
-                  }, 200);
+        <div className="flex flex-col items-center justify-center gap-4 my-4">
+          <div className="flex flex-col justify-center lg:flex-row items-center gap-4 w-full">
+            <div className="flex flex-col w-full lg:w-auto">
+              <label htmlFor="languageSelect" className="text-sm font-medium">
+                Language:
+              </label>
+              <Select
+                id="languageSelect"
+                value={selectedLanguage}
+                placeholder="Select a language"
+                size="lg"
+                startContent={
+                  <MdRecordVoiceOver className="text-xl text-[#5253A3]/80 mr-2" />
                 }
-              }}
+                classNames={{
+                  trigger:
+                    "bg-gray-50 border-gray-200 hover:bg-gray-100 data-[focus=true]:bg-gray-100 w-full md:min-w-[300px]",
+                  value: "text-gray-900 text-sm",
+                  label: "text-gray-700 font-medium",
+                  popoverContent: "bg-white border-gray-200",
+                }}
+                onChange={(e) => {
+                  const newLang = e.target.value;
+                  setSelectedLanguage(newLang);
+                  setSelectedVoice(
+                    `${newLang}-${voiceTypeMapping[selectedVoiceType][0]}`
+                  );
+                }}
+                disabled={narrating}
+              >
+                {languageOptions.map((lang) => (
+                  <SelectItem key={lang} value={lang} textValue={lang}>
+                    {lang}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <div className="flex flex-col w-full lg:w-auto">
+              <label htmlFor="voiceTypeSelect" className="text-sm font-medium">
+                Voice Type:
+              </label>
+              <Select
+                id="voiceTypeSelect"
+                value={selectedVoiceType}
+                placeholder="Select a voice type"
+                size="lg"
+                classNames={{
+                  trigger:
+                    "bg-gray-50 border-gray-200 hover:bg-gray-100 data-[focus=true]:bg-gray-100 w-full md:min-w-[300px]",
+                  value: "text-gray-900 text-sm",
+                  label: "text-gray-700 font-medium",
+                  popoverContent: "bg-white border-gray-200",
+                }}
+                onChange={(e) => {
+                  const newType = e.target.value;
+                  setSelectedVoiceType(newType);
+                  setSelectedVoice(
+                    `${selectedLanguage}-${voiceTypeMapping[newType][0]}`
+                  );
+                }}
+                disabled={narrating}
+              >
+                {voiceTypeOptions.map((type) => (
+                  <SelectItem key={type} value={type} textValue={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <div className="flex flex-col w-full lg:w-auto">
+              <label htmlFor="voiceNameSelect" className="text-sm font-medium">
+                Voice Name:
+              </label>
+              <Select
+                id="voiceNameSelect"
+                value={selectedVoice}
+                placeholder="Select a voice"
+                size="lg"
+                classNames={{
+                  trigger:
+                    "bg-gray-50 border-gray-200 hover:bg-gray-100 data-[focus=true]:bg-gray-100 w-full md:min-w-[300px]",
+                  value: "text-gray-900 text-sm",
+                  label: "text-gray-700 font-medium",
+                  popoverContent: "bg-white border-gray-200",
+                }}
+                onChange={(e) => setSelectedVoice(e.target.value)}
+                disabled={narrating}
+              >
+                {availableVoiceNames.map((voiceName) => (
+                  <SelectItem
+                    key={voiceName}
+                    value={voiceName}
+                    textValue={voiceName}
+                  >
+                    {voiceName}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          {narrating ? (
+            <button
+              onClick={handleStopNarration}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
             >
-              {voices.map((voice, index) => (
-                <SelectItem
-                  key={index}
-                  className="text-gray-900 hover:bg-gray-100"
-                  textValue={voice.name}
-                >
-                  {voice.name} ({voice.lang})
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-          <div>
-            {narrating ? (
-              <button
-                onClick={handleStopNarration}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Stop Narration
-              </button>
-            ) : (
-              <button
-                onClick={handlePlayNarration}
-                disabled={!selectedVoice}
-                className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${
-                  !selectedVoice ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                Play Narration
-              </button>
-            )}
-          </div>
+              Stop Narration
+            </button>
+          ) : (
+            <button
+              onClick={handlePlayNarration}
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Play Narration
+            </button>
+          )}
         </div>
       )}
 
-      {/* Flipbook */}
       {loading ? (
         <Skeleton className="rounded-xl md:rounded-2xl mt-6 md:mt-10">
           <div className="h-[300px] md:h-[500px] rounded-lg bg-secondary" />
         </Skeleton>
       ) : (
-        <div className="relative flex flex-col items-center mt-6 md:mt-10">
+        <div
+          className="relative flex flex-col items-center mt-6 md:mt-10"
+          style={narrating ? { pointerEvents: "none" } : {}}
+        >
           {/* @ts-expect-error */}
           <HTMLFlipBook
             width={Math.min(window.innerWidth * 0.8, 500)}

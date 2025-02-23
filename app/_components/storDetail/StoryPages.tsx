@@ -13,17 +13,17 @@ const StoryPages = ({ storyChapter }: StoryPagesProps) => {
       <div className="absolute left-0 top-0 w-2 h-full bg-gradient-to-r from-primary-700/30 to-transparent"></div>
 
       <div className="relative z-10 max-w-3xl mx-auto">
-        <h2 className="text-3xl font-serif font-bold text-primary mb-6 border-b-2 border-primary-700 pb-2">
+        <h2 className="sm:text-xl md:text-2xl lg:text-3xl font-serif font-bold text-primary mb-6 border-b-2 border-primary-700 pb-2">
           {storyChapter.chapterTitle}
         </h2>
 
         <div
-          className="text-xl font-serif text-primary leading-loose tracking-wide
+          className="sm:text-base md:text-lg lg:text-xl font-serif text-primary leading-loose tracking-wide
             bg-[#fdfaf5] p-8 rounded shadow-page-inner border-2 border-primary-50
             relative before:absolute before:top-2 before:bottom-2 before:left-2 before:w-1 before:bg-gradient-to-b before:from-primary-300 before:to-primary-500"
         >
-          <div className="h-[300px]  overflow-y-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-primary-50">
-            <span className="float-left text-7xl font-serif font-bold mr-1 mt-1 text-primary">
+          <div className="h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary-700 scrollbar-track-primary-50">
+            <span className="float-left sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold mr-1 mt-1 text-primary">
               {storyChapter.storyText[0]}
             </span>
             {storyChapter.storyText.slice(1)}
