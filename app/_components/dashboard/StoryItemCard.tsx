@@ -1,11 +1,14 @@
+"use client";
 import { Story } from "@/types";
 import React from "react";
 import { Card, CardFooter } from "@heroui/card";
 import Image from "next/image";
 import { Button } from "@heroui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const StoryItemCard = ({ story }: { story: Story }) => {
+  const router = useRouter();
   return (
     <Link href={`/view-story/${story?.storyId}`} key={story?.id}>
       <Card
@@ -26,6 +29,7 @@ const StoryItemCard = ({ story }: { story: Story }) => {
             color="primary"
             radius="full"
             size="sm"
+            onPress={() => router.push(`/view-story/${story?.storyId}`)}
           >
             Read Now
           </Button>

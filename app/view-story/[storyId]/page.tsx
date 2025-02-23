@@ -21,6 +21,7 @@ import Image from "next/image";
 import { Chapter, Story } from "@/types";
 import { MdRecordVoiceOver } from "react-icons/md";
 import { toast } from "react-toastify";
+import { Button } from "@heroui/button";
 
 const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const resolvedParams = use(params);
@@ -37,14 +38,18 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
   const [selectedVoiceType, setSelectedVoiceType] = useState("Neural2");
   const [selectedVoice, setSelectedVoice] = useState("");
 
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
+
+  const audioContextRef = useRef(
+    new (window.AudioContext || (window as any).webkitAudioContext)()
+  );
+
   const notifyError = (msg: string) => {
     toast.error(msg);
   };
 
-  // Define available languages
+  // Define available languages and voice types.
   const languageOptions = ["en-US", "en-AU", "en-IN", "en-GB"];
-
-  // Define available voice types
   const voiceTypeOptions = [
     "Neural2",
     "Studio",
@@ -54,9 +59,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     "Basic",
     "WaveNet",
   ];
-
-  // Mapping of voice type to available voice suffixes.
-  // For "Basic" we use "Standard" as the prefix.
   const voiceTypeMapping: { [key: string]: string[] } = {
     Neural2: ["Neural2-A", "Neural2-C", "Neural2-D", "Neural2-E"],
     Studio: ["Studio-O", "Studio-Q"],
@@ -89,17 +91,15 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     ],
   };
 
-  // Compute available voice names based on the selected language and voice type.
+  // Compute available voice names.
   const availableVoiceNames = voiceTypeMapping[selectedVoiceType].map(
     (suffix) => `${selectedLanguage}-${suffix}`
   );
 
-  // On mount, set default voice to the first option.
   useEffect(() => {
     setSelectedVoice(availableVoiceNames[0]);
   }, [selectedLanguage, selectedVoiceType]);
 
-  // Set screen size flag for responsive book dimensions
   useEffect(() => {
     setIsSmallScreen(window.innerWidth < 768);
     const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
@@ -107,7 +107,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Disable keyboard navigation (arrow keys) during narration
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (narrating && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
@@ -118,7 +117,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [narrating]);
 
-  // Fetch the story from the database
   useEffect(() => {
     getStory();
   }, []);
@@ -140,7 +138,7 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
     }
   };
 
-  // Recursively narrate each chapter by fetching audio via your TTS API.
+  // Recursively narrate chapters.
   const narrateChapter = async (chapterIndex: number) => {
     if (!narratingRef.current) return;
     if (!story || !story.output?.chapters) return;
@@ -150,7 +148,7 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
       return;
     }
 
-    // Flip to the correct page
+    // Flip to the correct page.
     const targetPage = chapterIndex + 1;
     if (count !== targetPage) {
       bookRef.current?.pageFlip().flip(targetPage);
@@ -170,51 +168,107 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
           },
         }),
       });
-
       const data: any = await response.json();
 
       if (!data.audioContent) {
         notifyError(
           "An error occurred: " +
             data.error.message +
-            ". Please try different voice."
+            ". Please try a different voice."
         );
         return;
       }
 
+      // Create the audio and attach the onended callback first.
       const audio = new Audio(`data:audio/wav;base64,${data.audioContent}`);
       audioRef.current = audio;
-      await audio.play();
       audio.onended = () => {
         if (!narratingRef.current) return;
         timeoutRef.current = setTimeout(() => {
           if (narratingRef.current) narrateChapter(chapterIndex + 1);
         }, 500);
       };
+
+      // Try playing the audio.
+      audio
+        .play()
+        .then(() => {
+          setPlaybackBlocked(false);
+        })
+        .catch((error) => {
+          console.warn("Playback prevented:", error);
+          setPlaybackBlocked(true);
+          notifyError("Audio playback blocked. Please tap to allow playback.");
+          // Attach a one-time click listener to retry.
+          document.addEventListener(
+            "click",
+            () => {
+              audio
+                .play()
+                .then(() => setPlaybackBlocked(false))
+                .catch((err) => console.error("Playback retry failed:", err));
+            },
+            { once: true }
+          );
+        });
     } catch (error: any) {
       console.error("Error narrating chapter:", error);
     }
   };
 
-  // When starting narration, determine the starting chapter based on the current page.
   const handlePlayNarration = () => {
+    if (!story || !story.output?.chapters) {
+      toast.error("No story available to narrate.");
+      return;
+    }
     const startChapter = count === 0 ? 0 : count - 1;
     setNarrating(true);
     narratingRef.current = true;
-    narrateChapter(startChapter);
+
+    const audioCtx = audioContextRef.current;
+    if (audioCtx.state === "suspended") {
+      audioCtx
+        .resume()
+        .then(() => {
+          const buffer = audioCtx.createBuffer(1, 1, 22050);
+          const source = audioCtx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(audioCtx.destination);
+          source.start();
+          narrateChapter(startChapter);
+        })
+        .catch((err) => {
+          console.error("AudioContext resume failed:", err);
+          notifyError("Audio permission denied. Please tap to allow audio.");
+        });
+    } else {
+      narrateChapter(startChapter);
+    }
   };
 
-  // Stop narration by pausing current audio and clearing any pending timeouts.
+  // Stop narration and clear timeouts.
   const handleStopNarration = () => {
     setNarrating(false);
     narratingRef.current = false;
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+  };
+
+  const handleManualPlay = async () => {
+    if (audioRef.current) {
+      try {
+        await audioRef.current.play();
+        setPlaybackBlocked(false);
+      } catch (error) {
+        console.error("Manual playback failed:", error);
+      }
     }
   };
 
@@ -333,19 +387,28 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
           </div>
 
           {narrating ? (
-            <button
-              onClick={handleStopNarration}
+            <Button
+              onPress={handleStopNarration}
               className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
             >
               Stop Narration
-            </button>
+            </Button>
           ) : (
-            <button
-              onClick={handlePlayNarration}
+            <Button
+              onPress={handlePlayNarration}
               className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
             >
               Play Narration
-            </button>
+            </Button>
+          )}
+
+          {playbackBlocked && (
+            <Button
+              onPress={handleManualPlay}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mt-4"
+            >
+              Tap to Allow Audio Playback
+            </Button>
           )}
         </div>
       )}
@@ -413,7 +476,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
             </div>
           </HTMLFlipBook>
 
-          {/* Navigation Buttons */}
           <div className="flex gap-4 md:gap-8 mt-6 md:mt-0 md:absolute md:top-1/2 md:-translate-y-1/2 w-full justify-between px-4">
             {count !== 0 && (
               <button
@@ -429,7 +491,6 @@ const ViewStory = ({ params }: { params: Promise<{ storyId: string }> }) => {
                 <IoIosArrowDropleftCircle className="text-[40px] md:text-[50px] text-primary cursor-pointer" />
               </button>
             )}
-
             {isSmallScreen
               ? count < (story?.output?.chapters?.length || 0) + 1 && (
                   <button
